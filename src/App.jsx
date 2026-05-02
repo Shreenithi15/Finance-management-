@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import TransactionList from './components/TransactionList';
 import TransactionModal from './components/TransactionModal';
 import Auth from './components/Auth';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import './App.css';
 
 function App() {
@@ -63,6 +64,34 @@ function App() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (transactions.length === 0) {
+      alert("No transactions to export.");
+      return;
+    }
+    
+    // Create CSV header
+    const headers = ["ID", "Type", "Amount", "Category", "Date", "Description"];
+    
+    // Convert transactions to CSV rows
+    const csvRows = transactions.map(t => {
+      return `"${t.id}","${t.type}","${t.amount}","${t.category}","${t.date}","${t.description.replace(/"/g, '""')}"`;
+    });
+    
+    // Combine header and rows
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    
+    // Create a Blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `finmanage_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // If not logged in, show Auth component
   if (!user) {
     return <Auth onLogin={handleLogin} />;
@@ -107,6 +136,7 @@ function App() {
                 <div className="filters">
                   <select 
                     className="custom-select"
+                    style={{ marginRight: '1rem' }}
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
                   >
@@ -114,6 +144,9 @@ function App() {
                     <option value="income">Income</option>
                     <option value="expense">Expense</option>
                   </select>
+                  <button className="btn primary-btn" onClick={handleExportCSV} style={{ padding: '0.5rem 1rem' }}>
+                    Export CSV
+                  </button>
                 </div>
               </div>
               <TransactionList 
@@ -127,16 +160,7 @@ function App() {
 
         {currentTab === 'analytics' && (
           <section id="analytics" className="page-section">
-            <div className="glassmorphism section-box full-height">
-              <div className="section-header">
-                <h3>Analytics</h3>
-              </div>
-              <div className="analytics-content">
-                <div className="empty-state">
-                  Charts coming soon! Keep adding transactions to see your financial trends.
-                </div>
-              </div>
-            </div>
+            <AnalyticsDashboard transactions={transactions} />
           </section>
         )}
       </main>
