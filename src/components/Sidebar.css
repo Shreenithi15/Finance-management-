@@ -56,6 +56,25 @@
   border-left: 4px solid var(--primary-color);
 }
 
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  color: var(--danger-color);
+  font-size: 1rem;
+}
+
+.logout-btn:hover {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+}
+
 @media (max-width: 900px) {
   .sidebar {
       width: 80px;

@@ -4,23 +4,54 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import TransactionList from './components/TransactionList';
 import TransactionModal from './components/TransactionModal';
+import Auth from './components/Auth';
 import './App.css';
 
 function App() {
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      return JSON.parse(savedUser);
+    }
+    return null;
+  });
+
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem('transactions');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return [];
-  });
   const [filterType, setFilterType] = useState('all');
 
+  // Transactions state depends on the logged-in user
+  const [transactions, setTransactions] = useState([]);
+
+  // Load transactions when user changes
   useEffect(() => {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-  }, [transactions]);
+    if (user) {
+      const allTransactions = JSON.parse(localStorage.getItem('allTransactions')) || {};
+      setTransactions(allTransactions[user.email] || []);
+    } else {
+      setTransactions([]);
+    }
+  }, [user]);
+
+  // Save transactions when they change, scoped to the current user
+  useEffect(() => {
+    if (user) {
+      const allTransactions = JSON.parse(localStorage.getItem('allTransactions')) || {};
+      allTransactions[user.email] = transactions;
+      localStorage.setItem('allTransactions', JSON.stringify(allTransactions));
+    }
+  }, [transactions, user]);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('currentUser', JSON.stringify(userData));
+    setCurrentTab('dashboard');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('currentUser');
+  };
 
   const handleAddTransaction = (newTransaction) => {
     setTransactions(prev => [...prev, newTransaction]);
@@ -32,14 +63,24 @@ function App() {
     }
   };
 
+  // If not logged in, show Auth component
+  if (!user) {
+    return <Auth onLogin={handleLogin} />;
+  }
+
+  // Otherwise, show main App
   return (
     <div className="app-container">
-      <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      <Sidebar 
+        currentTab={currentTab} 
+        setCurrentTab={setCurrentTab} 
+        onLogout={handleLogout}
+      />
 
       <main className="main-content">
         <header className="top-header">
           <div className="greeting">
-            <h1>Hello, <span className="accent-text">User</span>! 👋</h1>
+            <h1>Hello, <span className="accent-text">{user.name.split(' ')[0]}</span>! 👋</h1>
             <p>Here's your financial overview</p>
           </div>
           <button 

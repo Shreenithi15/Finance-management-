@@ -1,8 +1,8 @@
 import React from 'react';
-import { Wallet, PieChart, List, LineChart } from 'lucide-react';
+import { Wallet, PieChart, List, LineChart, LogOut } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ currentTab, setCurrentTab }) => {
+const Sidebar = ({ currentTab, setCurrentTab, onLogout }) => {
   return (
     <aside className="sidebar glassmorphism-sidebar">
       <div className="logo">
@@ -35,6 +35,13 @@ const Sidebar = ({ currentTab, setCurrentTab }) => {
           <span>Analytics</span>
         </a>
       </nav>
+      
+      <div className="sidebar-footer">
+        <button className="nav-item logout-btn" onClick={onLogout}>
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };
