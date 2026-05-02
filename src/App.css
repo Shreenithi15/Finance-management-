@@ -1,0 +1,35 @@
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+}
+
+.greeting h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}
+
+.accent-text {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.greeting p {
+  color: var(--text-secondary);
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .top-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+  }
+}
