@@ -9,10 +9,10 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import './App.css';
 
 function App() {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      return JSON.parse(savedUser);
+  const [session, setSession] = useState(() => {
+    const savedSession = localStorage.getItem('currentSession');
+    if (savedSession) {
+      return JSON.parse(savedSession);
     }
     return null;
   });
@@ -21,46 +21,80 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
 
-  // Transactions state depends on the logged-in user
   const [transactions, setTransactions] = useState([]);
+  
+  const user = session ? session.user : null;
+  const token = session ? session.token : null;
 
-  // Load transactions when user changes
+  // Fetch transactions from backend when session changes
   useEffect(() => {
-    if (user) {
-      const allTransactions = JSON.parse(localStorage.getItem('allTransactions')) || {};
-      setTransactions(allTransactions[user.email] || []);
-    } else {
-      setTransactions([]);
-    }
-  }, [user]);
+    const fetchTransactions = async () => {
+      if (session && session.token) {
+        try {
+          const res = await fetch('http://localhost:5000/api/transactions', {
+            headers: { 'Authorization': `Bearer ${session.token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setTransactions(data);
+          } else {
+            console.error('Failed to fetch transactions');
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        setTransactions([]);
+      }
+    };
+    fetchTransactions();
+  }, [session]);
 
-  // Save transactions when they change, scoped to the current user
-  useEffect(() => {
-    if (user) {
-      const allTransactions = JSON.parse(localStorage.getItem('allTransactions')) || {};
-      allTransactions[user.email] = transactions;
-      localStorage.setItem('allTransactions', JSON.stringify(allTransactions));
-    }
-  }, [transactions, user]);
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem('currentUser', JSON.stringify(userData));
+  const handleLogin = (sessionData) => {
+    setSession(sessionData);
+    localStorage.setItem('currentSession', JSON.stringify(sessionData));
     setCurrentTab('dashboard');
   };
 
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('currentUser');
+    setSession(null);
+    localStorage.removeItem('currentSession');
   };
 
-  const handleAddTransaction = (newTransaction) => {
-    setTransactions(prev => [...prev, newTransaction]);
+  const handleAddTransaction = async (newTransaction) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newTransaction)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(prev => [...prev, data]);
+      }
+    } catch (err) {
+      console.error('Error adding transaction', err);
+    }
   };
 
-  const handleDeleteTransaction = (id) => {
+  const handleDeleteTransaction = async (id) => {
     if(window.confirm("Are you sure you want to delete this transaction?")) {
-      setTransactions(prev => prev.filter(t => t.id !== id));
+      try {
+        const res = await fetch(`http://localhost:5000/api/transactions/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          setTransactions(prev => prev.filter(t => t.id !== id));
+        }
+      } catch (err) {
+        console.error('Error deleting transaction', err);
+      }
     }
   };
 

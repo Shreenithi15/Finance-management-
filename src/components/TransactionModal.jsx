@@ -41,7 +41,6 @@ const TransactionModal = ({ isOpen, onClose, onAddTransaction }) => {
     }
 
     const newTransaction = {
-      id: uuidv4(),
       type,
       amount: parseFloat(amount),
       category,

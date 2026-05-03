@@ -8,7 +8,7 @@ const Auth = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !password || (!isLogin && !name)) {
@@ -16,27 +16,28 @@ const Auth = ({ onLogin }) => {
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem('users')) || {};
+    try {
+      const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
+      const body = isLogin ? { email, password } : { name, email, password };
 
-    if (isLogin) {
-      // Handle Login
-      if (users[email] && users[email].password === password) {
-        onLogin({ email, name: users[email].name });
-      } else {
-        alert('Invalid email or password.');
-      }
-    } else {
-      // Handle Signup
-      if (users[email]) {
-        alert('An account with this email already exists.');
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Authentication failed');
         return;
       }
-      
-      const newUser = { email, password, name };
-      users[email] = newUser;
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      onLogin({ email, name });
+
+      // data contains { user, token }
+      onLogin(data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to connect to the server.');
     }
   };
 
